@@ -1,8 +1,7 @@
 import bcrypt
 from jose import jwt
 from datetime import datetime,timedelta
-from fastapi import Depends, HTTPException,status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, Request
 from jose import JWTError
 
 SECRET_KEY = "rohitsinghrajput" 
@@ -52,16 +51,24 @@ def create_access_token(data : dict):
     
 
 
-oauth_schema = OAuth2PasswordBearer(tokenUrl="auth/login")
 
-def get_current_user(token : str = Depends(oauth_schema)):
-    try:
-        payload = jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
-        email = payload.get("email")
-        if email is None:
-            raise HTTPException(status_code=404, detail="Invalid token buddy")
-        return email
-    except JWTError:
-        raise HTTPException(status_code=404, detail="internal server error")    
+
+async def get_current_user(request : Request):
+   try:
+       token = request.cookies.get("access_token") or (
+       request.headers.get("Authorization", "").removeprefix("Bearer ").strip() or None
+       )
+
+       if not token:
+              raise HTTPException(status_code=404,detail="token not found")
+
+       payload = jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
+       email = payload.get("email")
+       if not email:
+            raise HTTPException(status_code=404,detail="email is not found in the token")
+       return email
+   except JWTError:
+        raise HTTPException(status_code=401,detail="internal server error or invalid token")
+ 
 
 

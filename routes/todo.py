@@ -5,14 +5,14 @@ from models.todo import todos
 from security import get_current_user
 
 
-router = APIRouter()
+router = APIRouter(prefix="/todo", dependencies=[Depends(get_current_user)])
 
 
 
 
 @router.get("/protected")
 async def protected_route(cuser : str = Depends(get_current_user)):
-    return {"message" : "hey man this is the protected route"}
+    return {"message" : f'{cuser}'}
 
 
 
