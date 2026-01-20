@@ -16,7 +16,14 @@ async def signup(user : users):
     hashed_pass = hashpass(user.password)
 
     await user_collection.insert_one({"username" : user.username , "email" : user.email , "password" : hashed_pass})
-    return {"message" : "user successfully Created"}
+    
+    token = create_access_token({"email" : user.email})
+
+    return {
+        "access_token" : token,
+        "message" : "user signed up successfully"
+    }
+
 
 @router.post("/login")
 async def login(user : users):
